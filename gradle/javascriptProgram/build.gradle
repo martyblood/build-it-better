@@ -10,13 +10,20 @@ buildscript {
 
 configurations{
 	jsLib
+    webinf
 }
+
+ext.angularVersion = '1.1.1'
+ext.jqueryVersion = '2.1.0-2'
 
 dependencies {
 	jsLib project(path: ':javascriptLibrary', configuration: 'jsLib')
+    webinf "org.webjars:angularjs:${ext.angularVersion}"
+    webinf "org.webjars:jquery:${ext.jqueryVersion}"
 }
 
 apply plugin: 'js'
+apply plugin: 'war'
 
 javascript.source {
     prod {
@@ -49,3 +56,17 @@ task gzipjs(type: com.eriwen.gradle.js.tasks.GzipJsTask) {
 artifacts {
     jsLib gzipjs.dest
 }
+import org.apache.tools.ant.filters.ReplaceTokens
+war {
+    webAppDirName = ''
+    classpath configurations.webinf
+    from ('build/')  {
+        include '*.gz'
+    }
+    from ('src/main/app')
+    {
+        filter(ReplaceTokens, tokens: [jqueryVersion: project.ext.jqueryVersion, angularVersion: project.ext.angularVersion])
+    }
+}
+
+war.dependsOn gzipjs
